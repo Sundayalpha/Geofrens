@@ -1,0 +1,608 @@
+import React, { useState, useEffect } from 'react';
+import { ChevronRight, ChevronLeft, MapPin, Trophy, Star, Zap, Target, Brain, Globe, CheckCircle, XCircle, Shuffle } from 'lucide-react';
+
+const GeographyApp = () => {
+  const [showLanding, setShowLanding] = useState(true);
+  const [studentName, setStudentName] = useState('');
+
+  const LandingPage = ({ onStartQuiz, studentName, setStudentName }) => {
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [nameSubmitted, setNameSubmitted] = useState(false);
+    const [isAnimating, setIsAnimating] = useState(false);
+
+    const slides = [
+      {
+        id: 0,
+        type: 'name-input',
+        content: {
+          title: "Welcome, Geography Explorer! 🌎",
+          subtitle: "What's your name?",
+          placeholder: "Enter your name here..."
+        }
+      },
+      {
+        id: 1,
+        type: 'question',
+        content: {
+          title: `Hey ${studentName}!`,
+          subtitle: "Are you ready to learn every state in the United States of America?",
+          icon: <Globe className="text-blue-500" size={64} />,
+          animation: "bounce"
+        }
+      },
+      {
+        id: 2,
+        type: 'geography-deeper',
+        content: {
+          title: "🧩 Geography is More Than Just Maps! 🧩",
+          subtitle: "Geography isn't just memorizing locations...",
+          message: "It's about understanding how **location shapes everything** - the people, culture, and possibilities of each state.",
+          examples: [
+            { icon: "🎬", text: "Why is Hollywood in sunny California?", delay: 1000 },
+            { icon: "🏛️", text: "Why is Wall Street in New York's harbor?", delay: 2000 },
+            { icon: "🎵", text: "Why is country music's heart in Nashville?", delay: 3000 }
+          ]
+        }
+      },
+      {
+        id: 3,
+        type: 'connection-reveal',
+        content: {
+          title: "🌍 Location Tells the Story! 🌍",
+          subtitle: "Watch how geography creates culture, economy, and opportunity...",
+          layers: [
+            { name: "Mountains & Rivers", icon: "🏔️", color: "from-green-400 to-blue-400" },
+            { name: "Climate & Resources", icon: "☀️", color: "from-yellow-400 to-orange-400" },
+            { name: "Cities & Trade", icon: "🏙️", color: "from-purple-400 to-pink-400" },
+            { name: "Culture & Dreams", icon: "🎭", color: "from-red-400 to-pink-400" }
+          ]
+        }
+      },
+      {
+        id: 4,
+        type: 'fun-fact',
+        content: {
+          title: "Did You Know? 🤔",
+          subtitle: "Some state capitals will totally surprise you!",
+          facts: [
+            "New York's capital isn't New York City... it's Albany! 🏙️",
+            "California's capital isn't LA or San Francisco... it's Sacramento! ☀️",
+            "Illinois's capital isn't Chicago... it's Springfield! 🌽"
+          ],
+          icon: <Brain className="text-purple-500" size={48} />
+        }
+      },
+      {
+        id: 5,
+        type: 'final-cta',
+        content: {
+          title: `Ready, ${studentName}? 🎉`,
+          subtitle: "Time to become a US Geography Master!",
+          ctaText: "Start Learning Now! 🌟",
+          icon: <Trophy className="text-yellow-500" size={64} />
+        }
+      }
+    ];
+
+    const nextSlide = () => {
+      if (currentSlide === 0 && !nameSubmitted) {
+        if (studentName.trim()) {
+          setNameSubmitted(true);
+          setIsAnimating(true);
+          setTimeout(() => {
+            setCurrentSlide(1);
+            setIsAnimating(false);
+          }, 500);
+        }
+        return;
+      }
+
+      if (currentSlide < slides.length - 1) {
+        setIsAnimating(true);
+        setTimeout(() => {
+          setCurrentSlide(currentSlide + 1);
+          setIsAnimating(false);
+        }, 500);
+      }
+    };
+
+    const prevSlide = () => {
+      if (currentSlide > 1) {
+        setIsAnimating(true);
+        setTimeout(() => {
+          setCurrentSlide(currentSlide - 1);
+          setIsAnimating(false);
+        }, 500);
+      }
+    };
+
+    const startQuiz = () => {
+      onStartQuiz();
+    };
+
+    const renderSlide = (slide) => {
+      switch (slide.type) {
+        case 'name-input':
+          return (
+            <div className="text-center space-y-8">
+              <div className="space-y-4">
+                <h1 className="text-6xl font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text animate-pulse">
+                  {slide.content.title}
+                </h1>
+                <p className="text-2xl text-gray-700 font-medium">
+                  {slide.content.subtitle}
+                </p>
+              </div>
+              <div className="space-y-6">
+                <input
+                  type="text"
+                  value={studentName}
+                  onChange={(e) => setStudentName(e.target.value)}
+                  placeholder={slide.content.placeholder}
+                  className="text-2xl p-4 border-3 border-blue-400 rounded-xl text-center w-80 mx-auto focus:border-purple-500 focus:outline-none transition-colors"
+                  onKeyPress={(e) => e.key === 'Enter' && nextSlide()}
+                />
+                <div className="flex justify-center">
+                  <button
+                    onClick={nextSlide}
+                    disabled={!studentName.trim()}
+                    className={`px-8 py-4 rounded-xl font-bold text-xl flex items-center gap-2 transition-all ${
+                      studentName.trim()
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:scale-105 shadow-lg'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Let's Go! <ChevronRight size={24} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+
+        case 'question':
+          return (
+            <div className="text-center space-y-8">
+              <div className="animate-bounce">
+                {slide.content.icon}
+              </div>
+              <div className="space-y-4">
+                <h1 className="text-5xl font-bold text-blue-600 animate-pulse">
+                  {slide.content.title}
+                </h1>
+                <p className="text-3xl text-gray-700 font-medium leading-relaxed">
+                  {slide.content.subtitle}
+                </p>
+              </div>
+            </div>
+          );
+
+        case 'geography-deeper':
+          return (
+            <div className="text-center space-y-8">
+              <div className="space-y-4">
+                <h1 className="text-4xl font-bold text-transparent bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text">
+                  {slide.content.title}
+                </h1>
+                <div className="space-y-6">
+                  <p className="text-2xl text-gray-600 font-medium">
+                    {slide.content.subtitle}
+                  </p>
+                  <p className="text-3xl text-gray-800 font-bold leading-relaxed max-w-4xl mx-auto">
+                    {slide.content.message.split('**').map((part, index) => 
+                      index % 2 === 1 ? 
+                        <span key={index} className="text-transparent bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text">{part}</span> : 
+                        part
+                    )}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-6 max-w-3xl mx-auto">
+                {slide.content.examples.map((example, index) => (
+                  <div
+                    key={index}
+                    className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-2xl shadow-lg hover:scale-105 transition-transform duration-300 border-2 border-transparent hover:border-purple-300"
+                  >
+                    <div className="flex items-center justify-center gap-4">
+                      <span className="text-4xl">{example.icon}</span>
+                      <p className="text-xl font-bold text-gray-800">{example.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-8">
+                <p className="text-xl text-purple-600 font-semibold animate-pulse">
+                  🌟 Geography shapes destiny! 🌟
+                </p>
+              </div>
+            </div>
+          );
+
+        case 'connection-reveal':
+          return (
+            <div className="text-center space-y-8">
+              <div className="space-y-4">
+                <h1 className="text-4xl font-bold text-transparent bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text animate-pulse">
+                  {slide.content.title}
+                </h1>
+                <p className="text-2xl text-gray-700 font-medium">
+                  {slide.content.subtitle}
+                </p>
+              </div>
+              
+              <div className="relative max-w-4xl mx-auto">
+                <div className="bg-gradient-to-b from-blue-100 to-green-100 rounded-3xl p-8 shadow-2xl">
+                  <div className="relative h-80 bg-gray-100 rounded-2xl mb-8 overflow-hidden">
+                    <svg viewBox="0 0 400 200" className="w-full h-full">
+                      <path
+                        d="M50 50 Q100 30 200 50 Q300 40 350 60 L350 150 Q300 170 200 160 Q100 170 50 150 Z"
+                        fill="#e5e7eb"
+                        stroke="#9ca3af"
+                        strokeWidth="2"
+                        className="animate-pulse"
+                      />
+                    </svg>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {slide.content.layers.map((layer, index) => (
+                      <div key={index} className={`bg-gradient-to-r ${layer.color} p-4 rounded-xl text-white shadow-lg hover:scale-105 transition-transform`}>
+                        <div className="text-2xl mb-2">{layer.icon}</div>
+                        <p className="font-bold text-sm">{layer.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-yellow-100 to-orange-100 p-6 rounded-2xl max-w-3xl mx-auto shadow-lg">
+                <p className="text-xl font-bold text-gray-800">
+                  🎯 <span className="text-orange-600">Each layer builds on the last</span> - creating the unique story of every American state! 🎯
+                </p>
+              </div>
+            </div>
+          );
+
+        case 'fun-fact':
+          return (
+            <div className="text-center space-y-8">
+              <div className="flex items-center justify-center gap-4">
+                {slide.content.icon}
+                <h1 className="text-4xl font-bold text-purple-600">
+                  {slide.content.title}
+                </h1>
+              </div>
+              <p className="text-2xl text-gray-700 font-medium">
+                {slide.content.subtitle}
+              </p>
+              <div className="space-y-4 max-w-2xl mx-auto">
+                {slide.content.facts.map((fact, index) => (
+                  <div
+                    key={index}
+                    className="bg-gradient-to-r from-purple-100 to-pink-100 p-4 rounded-xl transform hover:scale-105 transition-all duration-300 shadow-md"
+                  >
+                    <p className="text-lg font-medium text-gray-800">{fact}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+
+        case 'final-cta':
+          return (
+            <div className="text-center space-y-8">
+              <div className="animate-bounce">
+                {slide.content.icon}
+              </div>
+              <div className="space-y-4">
+                <h1 className="text-5xl font-bold text-transparent bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text">
+                  {slide.content.title}
+                </h1>
+                <p className="text-3xl text-gray-700 font-medium">
+                  {slide.content.subtitle}
+                </p>
+              </div>
+              <button
+                onClick={startQuiz}
+                className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-12 py-6 rounded-2xl font-bold text-2xl hover:scale-110 transform transition-all duration-300 shadow-2xl animate-pulse"
+              >
+                {slide.content.ctaText}
+              </button>
+            </div>
+          );
+
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-6">
+        <div className={`max-w-6xl w-full transition-all duration-500 ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+          {renderSlide(slides[currentSlide])}
+          
+          <div className="flex justify-center items-center mt-12 space-x-4">
+            {currentSlide > 1 && (
+              <button
+                onClick={prevSlide}
+                className="bg-gray-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-600 transition-colors flex items-center gap-2"
+              >
+                <ChevronLeft size={20} /> Back
+              </button>
+            )}
+            
+            {currentSlide > 0 && currentSlide < slides.length - 1 && (
+              <button
+                onClick={nextSlide}
+                className="bg-blue-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-600 transition-colors flex items-center gap-2"
+              >
+                Continue <ChevronRight size={20} />
+              </button>
+            )}
+          </div>
+
+          <div className="flex justify-center mt-8">
+            <div className="flex space-x-2">
+              {slides.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-3 h-3 rounded-full transition-all ${
+                    index === currentSlide 
+                      ? 'bg-blue-500 w-8' 
+                      : index < currentSlide 
+                        ? 'bg-green-500' 
+                        : 'bg-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const USMapQuiz = ({ studentName }) => {
+    const [currentQuestion, setCurrentQuestion] = useState(0);
+    const [score, setScore] = useState(0);
+    const [selectedAnswer, setSelectedAnswer] = useState(null);
+    const [showResult, setShowResult] = useState(false);
+    const [gameFinished, setGameFinished] = useState(false);
+    const [answeredQuestions, setAnsweredQuestions] = useState([]);
+    const [questions, setQuestions] = useState([]);
+
+    const statesData = {
+      "AL": { name: "Alabama", capital: "Montgomery", region: "South" },
+      "AK": { name: "Alaska", capital: "Juneau", region: "West" },
+      "AZ": { name: "Arizona", capital: "Phoenix", region: "West" },
+      "AR": { name: "Arkansas", capital: "Little Rock", region: "South" },
+      "CA": { name: "California", capital: "Sacramento", region: "West" },
+      "CO": { name: "Colorado", capital: "Denver", region: "West" },
+      "CT": { name: "Connecticut", capital: "Hartford", region: "Northeast" },
+      "DE": { name: "Delaware", capital: "Dover", region: "Northeast" },
+      "FL": { name: "Florida", capital: "Tallahassee", region: "South" },
+      "GA": { name: "Georgia", capital: "Atlanta", region: "South" },
+      "TX": { name: "Texas", capital: "Austin", region: "South" },
+      "NY": { name: "New York", capital: "Albany", region: "Northeast" }
+    };
+
+    const generateQuestions = () => {
+      const stateKeys = Object.keys(statesData);
+      const shuffledStates = [...stateKeys].sort(() => Math.random() - 0.5);
+      const selectedStates = shuffledStates.slice(0, 8);
+
+      return selectedStates.map((stateCode) => {
+        const stateInfo = statesData[stateCode];
+        const wrongCapitals = Object.values(statesData)
+          .filter(s => s.capital !== stateInfo.capital)
+          .map(s => s.capital)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3);
+
+        const options = [stateInfo.capital, ...wrongCapitals];
+        const shuffledOptions = [...options];
+        const newCorrectIndex = Math.floor(Math.random() * 4);
+        
+        [shuffledOptions[0], shuffledOptions[newCorrectIndex]] = [shuffledOptions[newCorrectIndex], shuffledOptions[0]];
+
+        return {
+          question: `What is the capital of ${stateInfo.name}?`,
+          options: shuffledOptions,
+          correct: newCorrectIndex,
+          explanation: `${stateInfo.capital} is the capital of ${stateInfo.name}.`,
+          stateCode,
+          stateName: stateInfo.name,
+          region: stateInfo.region
+        };
+      });
+    };
+
+    useEffect(() => {
+      setQuestions(generateQuestions());
+    }, []);
+
+    const handleAnswerSelect = (answerIndex) => {
+      if (showResult) return;
+      setSelectedAnswer(answerIndex);
+    };
+
+    const handleSubmitAnswer = () => {
+      if (selectedAnswer === null) return;
+      
+      const isCorrect = selectedAnswer === questions[currentQuestion].correct;
+      setAnsweredQuestions([...answeredQuestions, {
+        stateCode: questions[currentQuestion].stateCode,
+        stateName: questions[currentQuestion].stateName,
+        isCorrect,
+        selectedAnswer: questions[currentQuestion].options[selectedAnswer],
+        correctAnswer: questions[currentQuestion].options[questions[currentQuestion].correct]
+      }]);
+      
+      if (isCorrect) setScore(score + 1);
+      setShowResult(true);
+    };
+
+    const handleNextQuestion = () => {
+      if (currentQuestion + 1 < questions.length) {
+        setCurrentQuestion(currentQuestion + 1);
+        setSelectedAnswer(null);
+        setShowResult(false);
+      } else {
+        setGameFinished(true);
+      }
+    };
+
+    const resetGame = () => {
+      setCurrentQuestion(0);
+      setScore(0);
+      setSelectedAnswer(null);
+      setShowResult(false);
+      setGameFinished(false);
+      setAnsweredQuestions([]);
+      setQuestions(generateQuestions());
+    };
+
+    if (questions.length === 0) {
+      return (
+        <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-red-50 to-blue-50 rounded-xl">
+          <div className="text-center">
+            <MapPin className="mx-auto mb-4 text-blue-600 animate-pulse" size={48} />
+            <p className="text-lg text-gray-600">Loading quiz for {studentName}...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (gameFinished) {
+      return (
+        <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-red-50 to-blue-50 rounded-xl">
+          <div className="text-center mb-8">
+            <Trophy className="mx-auto mb-4 text-yellow-500" size={64} />
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">
+              Great job, {studentName}! 🎉
+            </h2>
+            <p className="text-2xl font-semibold text-blue-600">
+              Score: {score}/{questions.length}
+            </p>
+          </div>
+          
+          <div className="text-center space-y-4">
+            <button 
+              onClick={resetGame}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold flex items-center gap-2 mx-auto"
+            >
+              <Shuffle size={20} />
+              Try Again
+            </button>
+            <button 
+              onClick={() => setShowLanding(true)}
+              className="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold flex items-center gap-2 mx-auto"
+            >
+              <ChevronLeft size={20} />
+              Back to Start
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-red-50 to-blue-50 rounded-xl">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <MapPin className="text-blue-600" size={32} />
+            <h1 className="text-2xl font-bold text-gray-800">
+              {studentName}'s Geography Challenge
+            </h1>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-600">Question {currentQuestion + 1} of {questions.length}</p>
+            <p className="text-lg font-semibold text-blue-600">Score: {score}</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">
+            {questions[currentQuestion].question}
+          </h2>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {questions[currentQuestion].options.map((option, index) => (
+              <button
+                key={index}
+                onClick={() => handleAnswerSelect(index)}
+                disabled={showResult}
+                className={`p-4 rounded-lg border-2 text-left transition-all ${
+                  showResult
+                    ? index === questions[currentQuestion].correct
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : index === selectedAnswer
+                      ? 'border-red-500 bg-red-50 text-red-700'
+                      : 'border-gray-200 bg-gray-50 text-gray-500'
+                    : selectedAnswer === index
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                }`}
+              >
+                {String.fromCharCode(65 + index)}. {option}
+              </button>
+            ))}
+          </div>
+
+          {showResult && (
+            <div className="mb-6 p-4 rounded-lg bg-gray-50">
+              <p className="text-gray-700">{questions[currentQuestion].explanation}</p>
+            </div>
+          )}
+
+          <div className="flex justify-between">
+            <button
+              onClick={() => setShowLanding(true)}
+              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
+            >
+              <ChevronLeft size={16} /> Back to Start
+            </button>
+            
+            {!showResult ? (
+              <button
+                onClick={handleSubmitAnswer}
+                disabled={selectedAnswer === null}
+                className={`px-6 py-2 rounded-lg font-medium ${
+                  selectedAnswer === null
+                    ? 'bg-gray-300 text-gray-500'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+              >
+                Submit Answer
+              </button>
+            ) : (
+              <button
+                onClick={handleNextQuestion}
+                className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium"
+              >
+                {currentQuestion + 1 < questions.length ? 'Next Question' : 'View Results'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      {showLanding ? (
+        <LandingPage 
+          onStartQuiz={() => setShowLanding(false)} 
+          studentName={studentName}
+          setStudentName={setStudentName}
+        />
+      ) : (
+        <USMapQuiz studentName={studentName} />
+      )}
+    </div>
+  );
+};
+
+export default GeographyApp;
