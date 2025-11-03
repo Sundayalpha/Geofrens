@@ -1,0 +1,429 @@
+import React, { useState, useEffect } from 'react';
+import { MapPin, Trophy, CheckCircle, XCircle, Shuffle } from 'lucide-react';
+
+const USMapQuiz = () => {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [score, setScore] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+  const [gameFinished, setGameFinished] = useState(false);
+  const [answeredQuestions, setAnsweredQuestions] = useState([]);
+  const [questions, setQuestions] = useState([]);
+  const [hoveredState, setHoveredState] = useState(null);
+
+  const statesData = {
+    "AL": { name: "Alabama", capital: "Montgomery", region: "South" },
+    "AK": { name: "Alaska", capital: "Juneau", region: "West" },
+    "AZ": { name: "Arizona", capital: "Phoenix", region: "West" },
+    "AR": { name: "Arkansas", capital: "Little Rock", region: "South" },
+    "CA": { name: "California", capital: "Sacramento", region: "West" },
+    "CO": { name: "Colorado", capital: "Denver", region: "West" },
+    "CT": { name: "Connecticut", capital: "Hartford", region: "Northeast" },
+    "DE": { name: "Delaware", capital: "Dover", region: "Northeast" },
+    "FL": { name: "Florida", capital: "Tallahassee", region: "South" },
+    "GA": { name: "Georgia", capital: "Atlanta", region: "South" },
+    "HI": { name: "Hawaii", capital: "Honolulu", region: "West" },
+    "ID": { name: "Idaho", capital: "Boise", region: "West" },
+    "IL": { name: "Illinois", capital: "Springfield", region: "Midwest" },
+    "IN": { name: "Indiana", capital: "Indianapolis", region: "Midwest" },
+    "IA": { name: "Iowa", capital: "Des Moines", region: "Midwest" },
+    "KS": { name: "Kansas", capital: "Topeka", region: "Midwest" },
+    "KY": { name: "Kentucky", capital: "Frankfort", region: "South" },
+    "LA": { name: "Louisiana", capital: "Baton Rouge", region: "South" },
+    "ME": { name: "Maine", capital: "Augusta", region: "Northeast" },
+    "MD": { name: "Maryland", capital: "Annapolis", region: "Northeast" },
+    "MA": { name: "Massachusetts", capital: "Boston", region: "Northeast" },
+    "MI": { name: "Michigan", capital: "Lansing", region: "Midwest" },
+    "MN": { name: "Minnesota", capital: "Saint Paul", region: "Midwest" },
+    "MS": { name: "Mississippi", capital: "Jackson", region: "South" },
+    "MO": { name: "Missouri", capital: "Jefferson City", region: "Midwest" },
+    "MT": { name: "Montana", capital: "Helena", region: "West" },
+    "NE": { name: "Nebraska", capital: "Lincoln", region: "Midwest" },
+    "NV": { name: "Nevada", capital: "Carson City", region: "West" },
+    "NH": { name: "New Hampshire", capital: "Concord", region: "Northeast" },
+    "NJ": { name: "New Jersey", capital: "Trenton", region: "Northeast" },
+    "NM": { name: "New Mexico", capital: "Santa Fe", region: "West" },
+    "NY": { name: "New York", capital: "Albany", region: "Northeast" },
+    "NC": { name: "North Carolina", capital: "Raleigh", region: "South" },
+    "ND": { name: "North Dakota", capital: "Bismarck", region: "Midwest" },
+    "OH": { name: "Ohio", capital: "Columbus", region: "Midwest" },
+    "OK": { name: "Oklahoma", capital: "Oklahoma City", region: "South" },
+    "OR": { name: "Oregon", capital: "Salem", region: "West" },
+    "PA": { name: "Pennsylvania", capital: "Harrisburg", region: "Northeast" },
+    "RI": { name: "Rhode Island", capital: "Providence", region: "Northeast" },
+    "SC": { name: "South Carolina", capital: "Columbia", region: "South" },
+    "SD": { name: "South Dakota", capital: "Pierre", region: "Midwest" },
+    "TN": { name: "Tennessee", capital: "Nashville", region: "South" },
+    "TX": { name: "Texas", capital: "Austin", region: "South" },
+    "UT": { name: "Utah", capital: "Salt Lake City", region: "West" },
+    "VT": { name: "Vermont", capital: "Montpelier", region: "Northeast" },
+    "VA": { name: "Virginia", capital: "Richmond", region: "South" },
+    "WA": { name: "Washington", capital: "Olympia", region: "West" },
+    "WV": { name: "West Virginia", capital: "Charleston", region: "South" },
+    "WI": { name: "Wisconsin", capital: "Madison", region: "Midwest" },
+    "WY": { name: "Wyoming", capital: "Cheyenne", region: "West" }
+  };
+
+  const generateQuestions = () => {
+    const stateKeys = Object.keys(statesData);
+    const shuffledStates = [...stateKeys].sort(() => Math.random() - 0.5);
+    const selectedStates = shuffledStates.slice(0, 12);
+
+    return selectedStates.map((stateCode) => {
+      const stateInfo = statesData[stateCode];
+      const wrongCapitals = Object.values(statesData)
+        .filter(s => s.capital !== stateInfo.capital)
+        .map(s => s.capital)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3);
+
+      const options = [stateInfo.capital, ...wrongCapitals];
+      const shuffledOptions = [...options];
+      const newCorrectIndex = Math.floor(Math.random() * 4);
+      
+      [shuffledOptions[0], shuffledOptions[newCorrectIndex]] = [shuffledOptions[newCorrectIndex], shuffledOptions[0]];
+
+      return {
+        question: `What is the capital of ${stateInfo.name}?`,
+        options: shuffledOptions,
+        correct: newCorrectIndex,
+        explanation: `${stateInfo.capital} is the capital of ${stateInfo.name}.`,
+        stateCode,
+        stateName: stateInfo.name,
+        region: stateInfo.region
+      };
+    });
+  };
+
+  const getScoreGrade = () => {
+    const percentage = (score / questions.length) * 100;
+    if (percentage >= 90) return { grade: 'A+', color: 'text-green-600', message: 'Outstanding! Geography expert!' };
+    if (percentage >= 80) return { grade: 'A', color: 'text-green-600', message: 'Excellent work!' };
+    if (percentage >= 70) return { grade: 'B', color: 'text-blue-600', message: 'Good job!' };
+    if (percentage >= 60) return { grade: 'C', color: 'text-yellow-600', message: 'Keep practicing!' };
+    return { grade: 'D', color: 'text-red-600', message: 'Study more!' };
+  };
+
+  const getMemoryTip = (stateCode) => {
+    const tips = {
+      'AL': "Montgomery was named after a Revolutionary War general.",
+      'AK': "Juneau sounds like 'You know' Alaska!",
+      'AZ': "Phoenix rises from the desert like the mythical bird.",
+      'AR': "Little Rock - imagine a small rock in Arkansas.",
+      'CA': "Sacramento sounds like 'sacred' - California's capital.",
+      'CO': "Denver is the 'Mile High City'.",
+      'CT': "Hartford has 'heart' in it.",
+      'DE': "Dover rhymes with 'over'.",
+      'FL': "Tallahassee has 'tall' trees.",
+      'GA': "Atlanta sounds like 'Atlantic'.",
+      'HI': "Honolulu means 'sheltered harbor'.",
+      'ID': "Boise sounds like 'boys'.",
+      'IL': "Springfield - where Lincoln lived.",
+      'IN': "Indianapolis has 'Indiana' in the name.",
+      'IA': "Des Moines sounds French.",
+      'KS': "Topeka sounds like 'top peak'.",
+      'KY': "Frankfort - think hot dogs!",
+      'LA': "Baton Rouge means 'red stick' in French.",
+      'ME': "Augusta sounds 'august' and grand.",
+      'MD': "Annapolis has 'Anna' in it.",
+      'MA': "Boston Tea Party!",
+      'MI': "Lansing sounds like 'dancing'.",
+      'MN': "Saint Paul is the twin city.",
+      'MS': "Jackson - like Michael Jackson.",
+      'MO': "Jefferson City - named after Thomas Jefferson.",
+      'MT': "Helena sounds like 'hello'.",
+      'NE': "Lincoln - the Great Emancipator.",
+      'NV': "Carson City - think TV host Carson.",
+      'NH': "Concord means harmony.",
+      'NJ': "Trenton sounds like 'trend'.",
+      'NM': "Santa Fe means 'holy faith'.",
+      'NY': "Albany, not NYC!",
+      'NC': "Raleigh sounds like 'rally'.",
+      'ND': "Bismarck - German chancellor.",
+      'OH': "Columbus discovered America.",
+      'OK': "Oklahoma City has the state name!",
+      'OR': "Salem sounds like 'sale'.",
+      'PA': "Harrisburg - Harry lives there.",
+      'RI': "Providence was provided.",
+      'SC': "Columbia - think river.",
+      'SD': "Pierre sounds like 'peer'.",
+      'TN': "Nashville is Music City.",
+      'TX': "Austin Powers lives in Texas!",
+      'UT': "Salt Lake City - salty lake.",
+      'VT': "Montpelier sounds French.",
+      'VA': "Richmond - the rich city.",
+      'WA': "Olympia - like Olympics.",
+      'WV': "Charleston - Charles lives there.",
+      'WI': "Madison - like James Madison.",
+      'WY': "Cheyenne - Native American tribe."
+    };
+    return tips[stateCode] || "Think of word associations!";
+  };
+
+  useEffect(() => {
+    setQuestions(generateQuestions());
+  }, []);
+
+  const getStateColor = (stateCode) => {
+    if (!questions.length) return '#e5e7eb';
+    
+    const currentStateCode = questions[currentQuestion]?.stateCode;
+    const answered = answeredQuestions.find(q => q.stateCode === stateCode);
+    
+    if (answered) {
+      return answered.isCorrect ? '#10b981' : '#ef4444';
+    }
+    
+    if (stateCode === currentStateCode) {
+      return '#3b82f6';
+    }
+    
+    if (hoveredState === stateCode) {
+      return '#60a5fa';
+    }
+    
+    return '#e5e7eb';
+  };
+
+  const handleAnswerSelect = (answerIndex) => {
+    if (showResult) return;
+    setSelectedAnswer(answerIndex);
+  };
+
+  const handleSubmitAnswer = () => {
+    if (selectedAnswer === null) return;
+    
+    const isCorrect = selectedAnswer === questions[currentQuestion].correct;
+    setAnsweredQuestions([...answeredQuestions, {
+      stateCode: questions[currentQuestion].stateCode,
+      stateName: questions[currentQuestion].stateName,
+      isCorrect,
+      selectedAnswer: questions[currentQuestion].options[selectedAnswer],
+      correctAnswer: questions[currentQuestion].options[questions[currentQuestion].correct]
+    }]);
+    
+    if (isCorrect) setScore(score + 1);
+    setShowResult(true);
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestion + 1 < questions.length) {
+      setCurrentQuestion(currentQuestion + 1);
+      setSelectedAnswer(null);
+      setShowResult(false);
+    } else {
+      setGameFinished(true);
+    }
+  };
+
+  const resetGame = () => {
+    setCurrentQuestion(0);
+    setScore(0);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setGameFinished(false);
+    setAnsweredQuestions([]);
+    setQuestions(generateQuestions());
+  };
+
+  if (questions.length === 0) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-red-50 to-blue-50 rounded-xl">
+        <div className="text-center">
+          <MapPin className="mx-auto mb-4 text-blue-600 animate-pulse" size={48} />
+          <p className="text-lg text-gray-600">Loading quiz...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameFinished) {
+    const scoreGrade = getScoreGrade();
+    const wrongAnswers = answeredQuestions.filter(q => !q.isCorrect);
+    const correctAnswers = answeredQuestions.filter(q => q.isCorrect);
+
+    return (
+      <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-red-50 to-blue-50 rounded-xl">
+        <div className="text-center mb-8">
+          <Trophy className="mx-auto mb-4 text-yellow-500" size={64} />
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Quiz Complete!</h2>
+          
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6 max-w-md mx-auto">
+            <div className={`text-6xl font-bold ${scoreGrade.color} mb-2`}>
+              {scoreGrade.grade}
+            </div>
+            <p className="text-2xl font-semibold text-gray-800">
+              {score}/{questions.length} Correct
+            </p>
+            <p className="text-lg text-gray-600">
+              ({Math.round((score/questions.length)*100)}%)
+            </p>
+            <p className={`text-lg font-medium ${scoreGrade.color} mt-2`}>
+              {scoreGrade.message}
+            </p>
+          </div>
+        </div>
+
+        {correctAnswers.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 className="text-xl font-bold mb-4 text-green-600 flex items-center gap-2">
+              <CheckCircle size={24} />
+              Correct Answers ({correctAnswers.length})
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {correctAnswers.map((result, index) => (
+                <div key={index} className="p-3 rounded-lg border-2 border-green-500 bg-green-50">
+                  <span className="font-semibold text-sm text-green-800">{result.stateName}</span>
+                  <p className="text-xs text-green-700 mt-1">✓ {result.correctAnswer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {wrongAnswers.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 className="text-xl font-bold mb-4 text-red-600 flex items-center gap-2">
+              <XCircle size={24} />
+              Study These ({wrongAnswers.length})
+            </h3>
+            <div className="space-y-4">
+              {wrongAnswers.map((result, index) => (
+                <div key={index} className="p-4 rounded-lg border-2 border-red-500 bg-red-50">
+                  <div className="flex items-start gap-3">
+                    <XCircle className="text-red-600 mt-1" size={20} />
+                    <div className="flex-1">
+                      <div className="mb-2">
+                        <span className="font-bold text-lg text-red-800">{result.stateName}</span>
+                        <span className="text-sm text-red-600 ml-2">({statesData[result.stateCode]?.region})</span>
+                      </div>
+                      
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-sm text-red-700 mb-1">
+                            Your answer: {result.selectedAnswer}
+                          </p>
+                          <p className="text-sm text-green-700 font-medium">
+                            Correct: {result.correctAnswer}
+                          </p>
+                        </div>
+                        
+                        <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                          <p className="text-xs font-medium text-blue-800 mb-1">💡 Memory Tip:</p>
+                          <p className="text-sm text-blue-700">
+                            {getMemoryTip(result.stateCode)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="text-center">
+          <button 
+            onClick={resetGame}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold flex items-center gap-2 mx-auto"
+          >
+            <Shuffle size={20} />
+            Try Another Quiz
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-red-50 to-blue-50 rounded-xl">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <MapPin className="text-blue-600" size={32} />
+          <h1 className="text-2xl font-bold text-gray-800">US States & Capitals Quiz</h1>
+        </div>
+        <div className="text-right">
+          <p className="text-sm text-gray-600">Question {currentQuestion + 1} of {questions.length}</p>
+          <p className="text-lg font-semibold text-blue-600">Score: {score}</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-6">
+          {questions[currentQuestion].question}
+        </h2>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {questions[currentQuestion].options.map((option, index) => (
+            <button
+              key={index}
+              onClick={() => handleAnswerSelect(index)}
+              disabled={showResult}
+              className={`p-4 rounded-lg border-2 text-left transition-all ${
+                showResult
+                  ? index === questions[currentQuestion].correct
+                    ? 'border-green-500 bg-green-50 text-green-700'
+                    : index === selectedAnswer
+                    ? 'border-red-500 bg-red-50 text-red-700'
+                    : 'border-gray-200 bg-gray-50 text-gray-500'
+                  : selectedAnswer === index
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+              }`}
+            >
+              {String.fromCharCode(65 + index)}. {option}
+            </button>
+          ))}
+        </div>
+
+        {showResult && (
+          <div className="mb-6 p-4 rounded-lg bg-gray-50">
+            <p className="text-gray-700">{questions[currentQuestion].explanation}</p>
+          </div>
+        )}
+
+        <div className="flex justify-end">
+          {!showResult ? (
+            <button
+              onClick={handleSubmitAnswer}
+              disabled={selectedAnswer === null}
+              className={`px-6 py-2 rounded-lg font-medium ${
+                selectedAnswer === null
+                  ? 'bg-gray-300 text-gray-500'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+            >
+              Submit Answer
+            </button>
+          ) : (
+            <button
+              onClick={handleNextQuestion}
+              className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium"
+            >
+              {currentQuestion + 1 < questions.length ? 'Next Question' : 'View Results'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">US Map</h3>
+        <div className="text-center text-gray-600">
+          <MapPin size={48} className="mx-auto mb-2" />
+          <p>Interactive map showing your progress</p>
+        </div>
+        
+        {hoveredState && (
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg text-center">
+            <p className="text-sm font-medium">
+              {statesData[hoveredState].name} - Capital: {statesData[hoveredState].capital}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default USMapQuiz;
